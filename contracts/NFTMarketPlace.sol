@@ -21,6 +21,7 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
 
     mapping(uint256 => NFTItem) public idToNFTItem;
     mapping(address => mapping(uint256 => uint256)) metadataToItemId; // nftAddress => tokenId => itemId
+    mapping(address => uint256[]) ownerToItemIds; // owner to itemId
 
     uint256 public listingFee = 0.025 ether;
 
@@ -70,10 +71,34 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
     function buy(uint256 itemId) public payable nonReentrant {
         NFTItem storage Item = idToNFTItem[itemId];
         require(Item.price != 0, "NFT is not existed");
+        require(Item.owner != msg.sender, "Cannot buy your own NFT");
         require(msg.value == Item.price, "For buying, pay the correct price");
         Item.listing = false;
         payable(Item.owner).transfer(msg.value); // pay to the owner
+        removeOwner(itemId, Item.owner);
         Item.owner = msg.sender; // change owner
+        ownerToItemIds[msg.sender].push(itemId);
+    }
+
+    function find(uint256 itemId, address owner)
+        private
+        view
+        returns (uint256)
+    {
+        for (uint256 i = 0; i < ownerToItemIds[owner].length; i++) {
+            if (ownerToItemIds[owner][i] == itemId) {
+                return i;
+            }
+        }
+        revert("cannot seem to find the ownership of this particular item");
+    }
+
+    function removeOwner(uint256 itemId, address owner) private {
+        uint256 index = find(itemId, owner);
+        ownerToItemIds[owner][index] = ownerToItemIds[owner][
+            ownerToItemIds[owner].length - 1
+        ];
+        delete ownerToItemIds[owner][ownerToItemIds[owner].length - 1];
     }
 
     function withdraw(
@@ -86,5 +111,19 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
         IERC721(nftAddress).transferFrom(address(this), msg.sender, tokenId);
         delete idToNFTItem[itemId];
         delete metadataToItemId[nftAddress][tokenId];
+        removeOwner(itemId, msg.sender);
+    }
+
+    function getAllAssets(address owner)
+        public
+        view
+        returns (NFTItem[] memory)
+    {
+        uint256[] memory itemIds = ownerToItemIds[owner];
+        NFTItem[] memory items = new NFTItem[](itemIds.length);
+        for (uint256 i = 0; i < itemIds.length; i++) {
+            items[i] = idToNFTItem[itemIds[i]];
+        }
+        return items;
     }
 }
