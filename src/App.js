@@ -2,44 +2,31 @@ import logo from "./logo.svg";
 import "./App.css";
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import store from "./store/store";
 import action from "./store/actions/MainActions";
-
-function Home() {
-  return (
-    <div>
-      <button onClick={() => console.log(store.getState().provider)}>
-        click
-      </button>
-      <button onClick={() => store.dispatch(action.asset.FetchAssets())}>
-        Load
-      </button>
-    </div>
-  );
-}
+import Home from "./Components/Home";
+import Assets from "./Components/Assets";
+import List from "./Components/List";
 
 function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch({ type: "PROVIDER_LOADING", payload: null });
     dispatch(action.blockchain.GetProvider());
     window.ethereum.on("networkChanged", function (networkId) {
       dispatch(action.blockchain.GetProvider());
     });
   }, []);
 
-  // useEffect(() => {
-  //   if (store.getState().provider) {
-  //     store.dispatch(action.asset.FetchAssets());
-  //   }
-  // }, [store.getState().provider]);
-
   return (
     <React.Fragment>
       <BrowserRouter>
         <Routes>
           <Route exact path="/" element={<Home />} />
+          <Route exact path="/assets" element={<Assets />} />
+          <Route exact path="/list" element={<List />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

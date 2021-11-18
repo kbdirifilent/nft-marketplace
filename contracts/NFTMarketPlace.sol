@@ -52,6 +52,7 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
                 tokenId
             ); // transfer the owner to the marketplace.
             metadataToItemId[nftAddress][tokenId] = _NFTIds.current();
+            ownerToItemIds[msg.sender].push(_NFTIds.current());
         } else {
             // the owner is already the marketplace.
             uint256 id = metadataToItemId[nftAddress][tokenId];
@@ -71,6 +72,7 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
     function buy(uint256 itemId) public payable nonReentrant {
         NFTItem storage Item = idToNFTItem[itemId];
         require(Item.price != 0, "NFT is not existed");
+        require(Item.listing, "NFT is not listed");
         require(Item.owner != msg.sender, "Cannot buy your own NFT");
         require(msg.value == Item.price, "For buying, pay the correct price");
         Item.listing = false;
@@ -123,6 +125,25 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
         NFTItem[] memory items = new NFTItem[](itemIds.length);
         for (uint256 i = 0; i < itemIds.length; i++) {
             items[i] = idToNFTItem[itemIds[i]];
+        }
+        return items;
+    }
+
+    function getAllListingAssets() public view returns (NFTItem[] memory) {
+        uint256 currentId = _NFTIds.current();
+        uint256 count = 0;
+        for (uint256 i = 1; i <= currentId; i++) {
+            if (idToNFTItem[i].listing) {
+                count += 1;
+            }
+        }
+        NFTItem[] memory items = new NFTItem[](count);
+        uint256 j = 0;
+        for (uint256 i = 1; i <= currentId; i++) {
+            if (idToNFTItem[i].listing) {
+                items[j] = idToNFTItem[i];
+                j++;
+            }
         }
         return items;
     }

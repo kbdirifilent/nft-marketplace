@@ -4,22 +4,25 @@ import NFTMarket from "../../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPla
 
 function FetchAssets() {
   return async (dispatch, getState) => {
-    const provider = getState().provider;
-    console.log(provider);
-    if (!provider) {
-      return;
+    try {
+      const provider = getState().provider.blockchain;
+      if (!provider) {
+        return;
+      }
+      const signer = provider.getSigner();
+      const accounts = await provider.listAccounts();
+      const marketContract = new ethers.Contract(
+        nftmarketaddress,
+        NFTMarket.abi,
+        signer
+      );
+      const data = await marketContract.getAllAssets(accounts[0]);
+      console.log(data);
+      dispatch({ type: "ASSETS", payload: data });
+    } catch (err) {
+      console.log(err);
+      dispatch({ type: "ASSETS", payload: [] });
     }
-    const signer = provider.getSigner();
-    const accounts = await provider.listAccounts();
-    const marketContract = new ethers.Contract(
-      nftmarketaddress,
-      NFTMarket.abi,
-      signer
-    );
-    console.log(marketContract);
-    const data = await marketContract.getAllAssets(accounts[0]);
-    console.log(data);
-    dispatch({ type: "ASSETS", payload: ["a"] });
   };
 }
 

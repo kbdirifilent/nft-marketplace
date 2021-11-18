@@ -1,7 +1,9 @@
-function NFTReducer(state = [], action) {
+function NFTReducer(state = { loading: false, assets: [] }, action) {
   switch (action.type) {
-    case "FETCH_NFT":
-      return action.payload;
+    case "ASSETS_LOADING":
+      return { ...state, loading: true };
+    case "ASSETS":
+      return { ...state, loading: false, assets: action.payload };
     default:
       return state;
   }

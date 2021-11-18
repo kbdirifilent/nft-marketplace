@@ -143,4 +143,38 @@ describe("NFTMarket", () => {
       market.connect(buyer2).withdraw(nftContractAddress, 1, 1)
     ).to.be.revertedWith("cannot withdraw other's token");
   });
+
+  it("should not be able to buy unlisted NFTs", async () => {
+    await market
+      .connect(seller1)
+      .list(nftContractAddress, 1, ETH(3), { value: listingPrice });
+    await market.connect(buyer1).buy(1, { value: ETH(3) });
+    await expect(
+      market.connect(buyer2).buy(1, { value: ETH(3) })
+    ).to.be.revertedWith("NFT is not listed");
+  });
+
+  it("should be able to get all assets", async () => {
+    await market
+      .connect(seller1)
+      .list(nftContractAddress, 1, ETH(3), { value: listingPrice });
+    await market
+      .connect(seller2)
+      .list(nftContractAddress, 2, ETH(3), { value: listingPrice });
+    await market.connect(seller2).buy(1, { value: ETH(3) });
+    const items = await market.getAllAssets(seller2.address);
+    expect(items.length).to.equal(2);
+  });
+
+  it("should be able to get all listing assets", async () => {
+    await market
+      .connect(seller1)
+      .list(nftContractAddress, 1, ETH(3), { value: listingPrice });
+    await market
+      .connect(seller2)
+      .list(nftContractAddress, 2, ETH(3), { value: listingPrice });
+    await market.connect(buyer1).buy(1, { value: ETH(3) });
+    const items = await market.getAllListingAssets();
+    expect(items.length).to.equal(1);
+  });
 });

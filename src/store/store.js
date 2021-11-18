@@ -4,7 +4,7 @@ import AssetReducer from "./reducers/AssetReducer";
 import ProviderReducer from "./reducers/BlockchainReducer";
 
 const store = createStore(
-  combineReducers({ asset: AssetReducer, provider: ProviderReducer }),
+  combineReducers({ assets: AssetReducer, provider: ProviderReducer }),
   applyMiddleware(thunk)
 );
 
