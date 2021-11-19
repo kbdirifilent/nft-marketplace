@@ -35,7 +35,13 @@ function FetchAssets() {
       data = data.map((asset) => toNFTItem(asset));
       for (let i = 0; i < data.length; i++) {
         const metadata = await tokenContract.tokenURI(data[i].tokenId);
-        const image = await axios.get(metadata).then((res) => res.data.image);
+        const res = await axios.get(metadata).then((res) => res.data);
+        console.log(res);
+        const name = res.name;
+        const description = res.description;
+        const image = res.image;
+        data[i].name = name;
+        data[i].description = description;
         data[i].image = image;
       }
 

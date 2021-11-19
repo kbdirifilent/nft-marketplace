@@ -8,13 +8,11 @@ function Assets() {
   const assets = useSelector((state) => state.assets);
 
   useEffect(() => {
-    if (provider !== null) {
+    if (provider.blockchain !== null) {
       dispatch({ type: "ASSETS_LOADING", payload: null });
       dispatch(action.asset.FetchAssets());
     }
-  }, [provider]);
-
-  console.log(assets.assets);
+  }, [provider.blockchain]);
 
   return (
     <div>
@@ -28,7 +26,6 @@ function Assets() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
         {assets.assets.length !== 0 &&
           assets.assets.map((asset, i) => {
-            console.log(asset.image);
             return (
               <div
                 key={i}
@@ -39,12 +36,16 @@ function Assets() {
                   <p style={{ opacity: 0.3 }}>
                     tokenId: {asset.tokenId} itemId: {asset.itemId}
                   </p>
+                  <h2 className="text-2xl text-white mb-2 mt-1">
+                    Name: {asset.name}
+                  </h2>
+                  <p className="text-white">Description: {asset.description}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-1xl font-bold text-white">
                       Price : {(asset.price / 1e18).toString()} MATIC
                     </p>
-                    <p className="text-2xl font-bold text-white">
-                      {asset.listing && <p>Status: Listing</p>}
+                    <p className="text-1xl font-bold text-white">
+                      {asset.listing && "Status: Listing"}
                       {!asset.listing && (
                         <button
                           className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
