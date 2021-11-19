@@ -42,6 +42,7 @@ describe("NFTMarket", () => {
     await nft.connect(seller1).createToken("https://token1.com"); // id 1
     await nft.connect(seller2).createToken("https://token2.com"); // id 2
   });
+
   it("should list an NFT", async () => {
     await market
       .connect(seller1)

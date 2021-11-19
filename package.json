@@ -9,6 +9,8 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "axios": "^0.24.0",
+    "ipfs-http-client": "^54.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6",
@@ -21,7 +23,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "deploy": "npx hardhat run scripts/deploy.js --network localhost",
+    "deploy": "npx hardhat run scripts/deploy.js --network hardhat",
     "node": "npx hardhat node",
     "build": "craco build",
     "test": "craco test",

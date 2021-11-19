@@ -14,6 +14,8 @@ function Assets() {
     }
   }, [provider]);
 
+  console.log(assets.assets);
+
   return (
     <div>
       <h1 className="px-20 py-10 text-3xl">Assets</h1>
@@ -26,14 +28,36 @@ function Assets() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
         {assets.assets.length !== 0 &&
           assets.assets.map((asset, i) => {
-            <div key={i} className="border shadow rounded-xl overflow-hidden">
-              <img src={asset.image} alt="nft" className="rounded" />
-              <div className="p-4 bg-black">
-                <p className="text-2xl font-bold text-white">
-                  Price - {asset.price} MATIC
-                </p>
+            console.log(asset.image);
+            return (
+              <div
+                key={i}
+                className="border shadow rounded-xl overflow-hidden ml-2 mr-2"
+              >
+                <img src={asset.image} alt="nft" className="rounded" />
+                <div className="p-4 bg-pink-500">
+                  <p style={{ opacity: 0.3 }}>
+                    tokenId: {asset.tokenId} itemId: {asset.itemId}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                    <p className="text-2xl font-bold text-white">
+                      Price : {(asset.price / 1e18).toString()} MATIC
+                    </p>
+                    <p className="text-2xl font-bold text-white">
+                      {asset.listing && <p>Status: Listing</p>}
+                      {!asset.listing && (
+                        <button
+                          className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
+                          style={{ width: "100px", height: "40px" }}
+                        >
+                          List
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>;
+            );
           })}
       </div>
     </div>
