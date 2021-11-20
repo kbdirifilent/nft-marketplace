@@ -22,19 +22,14 @@ function FetchAssets() {
       if (!provider) {
         return;
       }
-      const signer = provider.getSigner();
-      const accounts = await provider.listAccounts();
-      const marketContract = new ethers.Contract(
-        nftmarketaddress,
-        NFTMarket.abi,
-        signer
-      );
-      let data = await marketContract.getAllAssets(accounts[0]);
-      const tokenContract = new ethers.Contract(nftaddress, NFT.abi, signer);
+
+      const accounts = await provider.provider.listAccounts();
+
+      let data = await provider.nftMarketContract.getAllAssets(accounts[0]);
 
       data = data.map((asset) => toNFTItem(asset));
       for (let i = 0; i < data.length; i++) {
-        const metadata = await tokenContract.tokenURI(data[i].tokenId);
+        const metadata = await provider.nftContract.tokenURI(data[i].tokenId);
         const res = await axios.get(metadata).then((res) => res.data);
         console.log(res);
         const name = res.name;

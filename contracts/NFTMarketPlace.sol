@@ -69,6 +69,12 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
         }
     }
 
+    function unlist(uint256 itemId) public nonReentrant {
+        NFTItem storage nft = idToNFTItem[itemId];
+        require(nft.owner == msg.sender, "cannot unlist other's NFT");
+        nft.listing = false;
+    }
+
     function buy(uint256 itemId) public payable nonReentrant {
         NFTItem storage Item = idToNFTItem[itemId];
         require(Item.price != 0, "NFT is not existed");

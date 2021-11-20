@@ -1,18 +1,27 @@
 import React, { useEffect } from "react";
+import { ethers } from "ethers";
 import action from "../store/actions/MainActions";
 import { useDispatch, useSelector } from "react-redux";
+import NFTMarket from "../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPlace.json";
+import { nftaddress, nftmarketaddress } from "../config";
 
 function Assets() {
   const dispatch = useDispatch();
-  const provider = useSelector((state) => state.provider);
+  const provider = useSelector((state) => state.provider.blockchain);
   const assets = useSelector((state) => state.assets);
 
   useEffect(() => {
-    if (provider.blockchain !== null) {
+    if (provider !== null) {
       dispatch({ type: "ASSETS_LOADING", payload: null });
       dispatch(action.asset.FetchAssets());
     }
-  }, [provider.blockchain]);
+  }, [provider]);
+
+  const unlist = async (itemId) => {
+    const tx = await provider.nftMarketContract.unlist(itemId);
+    await tx.wait();
+    window.location.reload();
+  };
 
   return (
     <div>
@@ -30,9 +39,15 @@ function Assets() {
               <div
                 key={i}
                 className="border shadow rounded-xl overflow-hidden ml-2 mr-2"
+                style={{ paddingBottom: "5%" }}
               >
-                <img src={asset.image} alt="nft" className="rounded" />
-                <div className="p-4 bg-pink-500">
+                <img
+                  src={asset.image}
+                  alt="nft"
+                  className="rounded"
+                  style={{ height: "50%", width: "100%" }}
+                />
+                <div className="p-4 bg-pink-500" style={{ height: "100%" }}>
                   <p style={{ opacity: 0.3 }}>
                     tokenId: {asset.tokenId} itemId: {asset.itemId}
                   </p>
@@ -46,15 +61,28 @@ function Assets() {
                     </p>
                     <p className="text-1xl font-bold text-white">
                       {asset.listing && "Status: Listing"}
-                      {!asset.listing && (
-                        <button
-                          className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
-                          style={{ width: "100px", height: "40px" }}
-                        >
-                          List
-                        </button>
-                      )}
+
+                      {!asset.listing && "Status: Not Listing"}
                     </p>
+                  </div>
+                  <div>
+                    {asset.listing && (
+                      <button
+                        className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
+                        style={{ width: "100px", height: "40px" }}
+                        onClick={() => unlist(asset.itemId)}
+                      >
+                        Unlist
+                      </button>
+                    )}
+                    {!asset.listing && (
+                      <button
+                        className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
+                        style={{ width: "100px", height: "40px" }}
+                      >
+                        List
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

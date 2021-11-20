@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { create as ipfsHttpClient } from "ipfs-http-client";
-
 import { nftaddress, nftmarketaddress } from "../config";
-import NFT from "../artifacts/contracts/NFT.sol/NFT.json";
-import NFTMarket from "../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPlace.json";
+
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
@@ -16,6 +14,11 @@ function List() {
     price: "",
     name: "",
     description: "",
+  });
+  const [listInput, updateListInput] = useState({
+    address: "",
+    tokenId: "",
+    price: "",
   });
 
   const navigate = useNavigate();
@@ -48,11 +51,28 @@ function List() {
     }
   }
 
-  async function list(url) {
-    const signer = provider.getSigner();
+  async function listExisting() {
+    const { address, tokenId, price } = listInput;
+    if (!address || !tokenId || !price) return;
 
-    let contract = new ethers.Contract(nftaddress, NFT.abi, signer);
-    let transaction = await contract.createToken(url);
+    let listingFee = await provider.nftMarketContract.listingFee();
+    listingFee = listingFee.toString();
+
+    let transaction = await provider.nftMarketContract.list(
+      listInput.address,
+      listInput.tokenId,
+      ethers.utils.parseUnits(listInput.price.toString(), "ether"),
+      {
+        value: listingFee,
+      }
+    );
+
+    await transaction.wait();
+    navigate("/assets");
+  }
+
+  async function list(url) {
+    let transaction = await provider.nftContract.createToken(url);
     let tx = await transaction.wait();
 
     let event = tx.events[0];
@@ -62,16 +82,20 @@ function List() {
 
     const price = ethers.utils.parseUnits(formInput.price, "ether");
 
-    contract = new ethers.Contract(nftmarketaddress, NFTMarket.abi, signer);
-    let listingFee = await contract.listingFee();
+    let listingFee = await provider.nftMarketContract.listingFee();
     listingFee = listingFee.toString();
 
-    transaction = await contract.list(nftaddress, tokenId, price, {
-      value: listingFee,
-    });
+    transaction = await provider.nftMarketContract.list(
+      nftaddress,
+      tokenId,
+      price,
+      {
+        value: listingFee,
+      }
+    );
 
     await transaction.wait();
-    navigate("/");
+    navigate("/assets");
   }
 
   return (
@@ -84,24 +108,34 @@ function List() {
           className="col mt-2 mr-2 border rounded p-3"
           size="25"
           placeholder="token address"
+          onChange={(e) =>
+            updateListInput({ ...listInput, address: e.target.value })
+          }
         />
         <input
           type="text"
           className="col mt-2 mr-2 border rounded p-3"
           size="25"
           placeholder="token ID"
+          onChange={(e) =>
+            updateListInput({ ...listInput, tokenId: e.target.value })
+          }
         />
         <input
           type="text"
           className="col mt-2 border rounded p-3"
           size="25"
           placeholder="price (MATIC)"
+          onChange={(e) =>
+            updateListInput({ ...listInput, price: e.target.value })
+          }
         />
       </div>
       <div className="px-20">
         <button
           className="font-bold mt-4 bg-pink-500 text-white rounded shadow-lg"
           style={{ width: "100px", height: "40px" }}
+          onClick={listExisting}
         >
           List
         </button>
