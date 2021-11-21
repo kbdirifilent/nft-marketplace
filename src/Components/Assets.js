@@ -4,6 +4,7 @@ import action from "../store/actions/MainActions";
 import { useDispatch, useSelector } from "react-redux";
 import NFTMarket from "../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPlace.json";
 import { nftaddress, nftmarketaddress } from "../config";
+import toast from "react-hot-toast";
 
 function Assets() {
   const dispatch = useDispatch();
@@ -13,7 +14,12 @@ function Assets() {
   useEffect(() => {
     if (provider !== null) {
       dispatch({ type: "ASSETS_LOADING", payload: null });
-      dispatch(action.asset.FetchAssets());
+      const fetchAssetPromise = dispatch(action.asset.FetchAssets());
+      toast.promise(fetchAssetPromise, {
+        loading: "fetching assets...",
+        success: "Done",
+        error: "Error fetching",
+      });
     }
   }, [provider]);
 

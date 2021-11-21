@@ -5,6 +5,7 @@ import { nftaddress, nftmarketaddress } from "../config";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
@@ -27,10 +28,15 @@ function List() {
   async function onChange(e) {
     const file = e.target.files[0];
     try {
-      const added = await client.add(file, {
+      const fileAddedPromise = client.add(file, {
         progress: (prog) => console.log(`received: ${prog}`),
       });
-      console.log(added);
+      toast.promise(fileAddedPromise, {
+        loading: "Receiving Image File",
+        success: "Image Received",
+        error: "Error receiving Image file",
+      });
+      const added = await fileAddedPromise;
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
       setFileUrl(url);
     } catch (e) {
@@ -43,7 +49,13 @@ function List() {
     if (!name || !description || !price || !fileUrl) return;
     const data = JSON.stringify({ name, description, image: fileUrl });
     try {
-      const added = await client.add(data);
+      const uploadToIPFSPromise = client.add(data);
+      toast.promise(uploadToIPFSPromise, {
+        loading: "Uploading metadata to IPFS",
+        success: "Done",
+        error: "Error uploading",
+      });
+      const added = await uploadToIPFSPromise;
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
       await list(url);
     } catch (e) {
@@ -72,8 +84,20 @@ function List() {
   }
 
   async function list(url) {
-    let transaction = await provider.nftContract.createToken(url);
-    let tx = await transaction.wait();
+    const createTokenPromise = provider.nftContract.createToken(url);
+    toast.promise(createTokenPromise, {
+      loading: "Creating your NFT",
+      success: "Done, confirming...",
+      error: "Error minting",
+    });
+    let transaction = await createTokenPromise;
+    let transactionPromise = transaction.wait();
+    toast.promise(transactionPromise, {
+      loading: "Confirming Transaction",
+      success: "Done",
+      error: "Error",
+    });
+    let tx = await transactionPromise;
 
     let event = tx.events[0];
     let value = event.args[2];
@@ -82,10 +106,16 @@ function List() {
 
     const price = ethers.utils.parseUnits(formInput.price, "ether");
 
-    let listingFee = await provider.nftMarketContract.listingFee();
+    const listingDataPromise = provider.nftMarketContract.listingFee();
+    toast.promise(listingDataPromise, {
+      loading: "Retrieving Listing data",
+      success: "Done",
+      error: "Error retrieving Listing data",
+    });
+    let listingFee = await listingDataPromise;
     listingFee = listingFee.toString();
 
-    transaction = await provider.nftMarketContract.list(
+    const listPromise = provider.nftMarketContract.list(
       nftaddress,
       tokenId,
       price,
@@ -93,8 +123,20 @@ function List() {
         value: listingFee,
       }
     );
+    toast.promise(listPromise, {
+      loading: "Perform listing",
+      success: "Done, confirming...",
+      error: "Error listing",
+    });
+    transaction = await listPromise;
+    transactionPromise = transaction.wait();
+    toast.promise(transactionPromise, {
+      loading: "Confirming Transaction",
+      success: "Done",
+      error: "Error",
+    });
+    await transactionPromise;
 
-    await transaction.wait();
     navigate("/assets");
   }
 
