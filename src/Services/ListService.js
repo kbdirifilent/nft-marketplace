@@ -57,7 +57,7 @@ const ListService = {
       error: "Error",
     });
     await transactionPromise;
-
+    window.location.reload();
     navigate("/assets");
   },
   unlist: async (provider, itemId) => {
@@ -106,6 +106,7 @@ const ListService = {
     });
 
     await transactionPromise;
+    window.location.reload();
     navigate("/assets");
   },
 };

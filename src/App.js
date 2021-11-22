@@ -7,6 +7,7 @@ import action from "./store/actions/MainActions";
 import Home from "./Components/Home";
 import Assets from "./Components/Assets";
 import List from "./Components/List";
+import NavigationBar from "./Components/NavigationBar";
 
 function App() {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ function App() {
 
   return (
     <React.Fragment>
+      <NavigationBar />
       <BrowserRouter>
         <Routes>
           <Route exact path="/" element={<Home />} />
