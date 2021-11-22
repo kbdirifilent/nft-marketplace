@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 
+import ListService from "../Services/ListService";
+
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
 function List() {
@@ -57,87 +59,10 @@ function List() {
       });
       const added = await uploadToIPFSPromise;
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
-      await list(url);
+      await ListService.list(provider, url, formInput, navigate);
     } catch (e) {
       console.log("Error uploading file: ", e);
     }
-  }
-
-  async function listExisting() {
-    const { address, tokenId, price } = listInput;
-    if (!address || !tokenId || !price) return;
-
-    let listingFee = await provider.nftMarketContract.listingFee();
-    listingFee = listingFee.toString();
-
-    let transaction = await provider.nftMarketContract.list(
-      listInput.address,
-      listInput.tokenId,
-      ethers.utils.parseUnits(listInput.price.toString(), "ether"),
-      {
-        value: listingFee,
-      }
-    );
-
-    await transaction.wait();
-    navigate("/assets");
-  }
-
-  async function list(url) {
-    const createTokenPromise = provider.nftContract.createToken(url);
-    toast.promise(createTokenPromise, {
-      loading: "Creating your NFT",
-      success: "Done, confirming...",
-      error: "Error minting",
-    });
-    let transaction = await createTokenPromise;
-    let transactionPromise = transaction.wait();
-    toast.promise(transactionPromise, {
-      loading: "Confirming Transaction",
-      success: "Done",
-      error: "Error",
-    });
-    let tx = await transactionPromise;
-
-    let event = tx.events[0];
-    let value = event.args[2];
-    let tokenId = value.toNumber();
-    console.log("tokenId", tokenId);
-
-    const price = ethers.utils.parseUnits(formInput.price, "ether");
-
-    const listingDataPromise = provider.nftMarketContract.listingFee();
-    toast.promise(listingDataPromise, {
-      loading: "Retrieving Listing data",
-      success: "Done",
-      error: "Error retrieving Listing data",
-    });
-    let listingFee = await listingDataPromise;
-    listingFee = listingFee.toString();
-
-    const listPromise = provider.nftMarketContract.list(
-      nftaddress,
-      tokenId,
-      price,
-      {
-        value: listingFee,
-      }
-    );
-    toast.promise(listPromise, {
-      loading: "Perform listing",
-      success: "Done, confirming...",
-      error: "Error listing",
-    });
-    transaction = await listPromise;
-    transactionPromise = transaction.wait();
-    toast.promise(transactionPromise, {
-      loading: "Confirming Transaction",
-      success: "Done",
-      error: "Error",
-    });
-    await transactionPromise;
-
-    navigate("/assets");
   }
 
   return (
@@ -177,7 +102,9 @@ function List() {
         <button
           className="font-bold mt-4 bg-pink-500 text-white rounded shadow-lg"
           style={{ width: "100px", height: "40px" }}
-          onClick={listExisting}
+          onClick={() =>
+            ListService.listExisting(provider, listInput, navigate)
+          }
         >
           List
         </button>

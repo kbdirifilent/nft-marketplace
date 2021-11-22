@@ -35,6 +35,7 @@ function FetchAssets() {
         const name = res.name;
         const description = res.description;
         const image = res.image;
+        data[i].metadata = metadata;
         data[i].name = name;
         data[i].description = description;
         data[i].image = image;

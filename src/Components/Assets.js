@@ -2,14 +2,18 @@ import React, { useEffect } from "react";
 import { ethers } from "ethers";
 import action from "../store/actions/MainActions";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
 import NFTMarket from "../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPlace.json";
 import { nftaddress, nftmarketaddress } from "../config";
 import toast from "react-hot-toast";
+import ListService from "../Services/ListService";
 
 function Assets() {
   const dispatch = useDispatch();
   const provider = useSelector((state) => state.provider.blockchain);
   const assets = useSelector((state) => state.assets);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (provider !== null) {
@@ -22,12 +26,6 @@ function Assets() {
       });
     }
   }, [provider]);
-
-  const unlist = async (itemId) => {
-    const tx = await provider.nftMarketContract.unlist(itemId);
-    await tx.wait();
-    window.location.reload();
-  };
 
   return (
     <div>
@@ -44,8 +42,8 @@ function Assets() {
             return (
               <div
                 key={i}
-                className="border shadow rounded-xl overflow-hidden ml-2 mr-2"
-                style={{ paddingBottom: "5%" }}
+                className="border shadow rounded-xl ml-2 mr-2 mb-1 overflow-hidden"
+                style={{ height: "600px" }}
               >
                 <img
                   src={asset.image}
@@ -76,7 +74,9 @@ function Assets() {
                       <button
                         className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
                         style={{ width: "100px", height: "40px" }}
-                        onClick={() => unlist(asset.itemId)}
+                        onClick={() =>
+                          ListService.unlist(provider, asset.itemId)
+                        }
                       >
                         Unlist
                       </button>
@@ -85,6 +85,17 @@ function Assets() {
                       <button
                         className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
                         style={{ width: "100px", height: "40px" }}
+                        onClick={() =>
+                          ListService.listExisting(
+                            provider,
+                            {
+                              address: nftaddress,
+                              tokenId: asset.tokenId,
+                              price: asset.price / 1e18,
+                            },
+                            navigate
+                          )
+                        }
                       >
                         List
                       </button>
