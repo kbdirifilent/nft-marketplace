@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import action from "../store/actions/MainActions";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,8 @@ function Assets() {
 
   const navigate = useNavigate();
 
+  const [hoverElement, setHoverElement] = useState(-1);
+
   useEffect(() => {
     if (provider !== null) {
       dispatch({ type: "ASSETS_LOADING", payload: null });
@@ -26,6 +28,29 @@ function Assets() {
       });
     }
   }, [provider]);
+
+  const withdraw = async (nftaddress, tokenId, itemId) => {
+    const withdrawPromise = provider.nftMarketContract.withdraw(
+      nftaddress,
+      tokenId,
+      itemId
+    );
+    toast.promise(withdrawPromise, {
+      loading: "withdrawing assets...",
+      success: "Done",
+      error: "Error withdrawal",
+    });
+    let transaction = await withdrawPromise;
+    const transactionPromise = transaction.wait();
+    toast.promise(transactionPromise, {
+      loading: "Confirming Transaction",
+      success: "Done",
+      error: "Error",
+    });
+    await transactionPromise;
+  };
+
+  assets.assets = assets.assets.sort((a, b) => a.itemId - b.itemId);
 
   return (
     <div>
@@ -42,9 +67,75 @@ function Assets() {
             return (
               <div
                 key={i}
+                id={"asset" + asset.itemId}
                 className="border shadow rounded-xl ml-2 mr-2 mb-1 overflow-hidden"
-                style={{ height: "600px" }}
+                style={{ height: "500px" }}
+                onMouseEnter={() => setHoverElement(i)}
+                onMouseLeave={() => setHoverElement(-1)}
               >
+                {hoverElement === i && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      float: "left",
+                    }}
+                  >
+                    {!asset.listing && (
+                      <button
+                        className="font-bold mt-4 ml-2 bg-blue-300 text-white shadow-lg float-right"
+                        style={{
+                          width: "100px",
+                          height: "40px",
+                          borderRadius: "10px",
+                        }}
+                        onClick={() =>
+                          withdraw(nftaddress, asset.tokenId, asset.itemId)
+                        }
+                      >
+                        Withdraw
+                      </button>
+                    )}
+                    {asset.listing && (
+                      <button
+                        className="font-bold mt-4 ml-2 bg-blue-300 text-white rounded shadow-lg"
+                        style={{
+                          width: "100px",
+                          height: "40px",
+                          borderRadius: "10px",
+                        }}
+                        onClick={() =>
+                          ListService.unlist(provider, asset.itemId)
+                        }
+                      >
+                        Unlist
+                      </button>
+                    )}
+                    {!asset.listing && (
+                      <button
+                        className="font-bold mt-4 ml-2 bg-blue-300 text-white rounded shadow-lg"
+                        style={{
+                          width: "100px",
+                          height: "40px",
+                          borderRadius: "10px",
+                        }}
+                        onClick={() =>
+                          ListService.listExisting(
+                            provider,
+                            {
+                              address: nftaddress,
+                              tokenId: asset.tokenId,
+                              price: asset.price / 1e18,
+                            },
+                            navigate
+                          )
+                        }
+                      >
+                        List
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <img
                   src={asset.image}
                   alt="nft"
@@ -68,38 +159,6 @@ function Assets() {
 
                       {!asset.listing && "Status: Not Listing"}
                     </p>
-                  </div>
-                  <div>
-                    {asset.listing && (
-                      <button
-                        className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
-                        style={{ width: "100px", height: "40px" }}
-                        onClick={() =>
-                          ListService.unlist(provider, asset.itemId)
-                        }
-                      >
-                        Unlist
-                      </button>
-                    )}
-                    {!asset.listing && (
-                      <button
-                        className="font-bold mt-4 bg-blue-300 text-white rounded shadow-lg"
-                        style={{ width: "100px", height: "40px" }}
-                        onClick={() =>
-                          ListService.listExisting(
-                            provider,
-                            {
-                              address: nftaddress,
-                              tokenId: asset.tokenId,
-                              price: asset.price / 1e18,
-                            },
-                            navigate
-                          )
-                        }
-                      >
-                        List
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

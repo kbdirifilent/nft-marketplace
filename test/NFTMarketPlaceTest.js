@@ -99,10 +99,14 @@ describe("NFTMarket", () => {
     expect(NFTItem).to.deep.equal(targetNFTItem);
   });
 
-  it("should withdraw NFT from the marketplace", async () => {
+  it.only("should withdraw NFT from the marketplace", async () => {
     await market
       .connect(seller1)
       .list(nftContractAddress, 1, ETH(3), { value: listingPrice });
+    await nft.connect(seller1).createToken("https://token3.com"); // id 3
+    await market
+      .connect(seller1)
+      .list(nftContractAddress, 3, ETH(3), { value: listingPrice });
     await market.connect(buyer1).buy(1, { value: ETH(3) });
     let owner = await nft.ownerOf(1);
     expect(owner).to.equal(marketAddress);
@@ -121,6 +125,8 @@ describe("NFTMarket", () => {
     };
     expect(NFTItem).to.deep.equal(targetNFTItem);
     // get address zero in ethers
+    const items = await market.getAllAssets(seller1.address);
+    expect(items.length).to.equal(1);
   });
 
   it("non-owner should not be able to list NFT", async () => {

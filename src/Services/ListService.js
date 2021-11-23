@@ -57,8 +57,8 @@ const ListService = {
       error: "Error",
     });
     await transactionPromise;
+    await navigate("/assets");
     window.location.reload();
-    navigate("/assets");
   },
   unlist: async (provider, itemId) => {
     const unlistPromise = provider.nftMarketContract.unlist(itemId);
@@ -106,8 +106,8 @@ const ListService = {
     });
 
     await transactionPromise;
+    await navigate("/assets");
     window.location.reload();
-    navigate("/assets");
   },
 };
 
