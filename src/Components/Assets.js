@@ -142,7 +142,7 @@ function Assets() {
                   className="rounded"
                   style={{ height: "50%", width: "100%" }}
                 />
-                <div className="p-4 bg-pink-500" style={{ height: "100%" }}>
+                <div className="p-4 bg-pink-500" style={{ height: "50%" }}>
                   <p style={{ opacity: 0.3 }}>
                     tokenId: {asset.tokenId} itemId: {asset.itemId}
                   </p>
