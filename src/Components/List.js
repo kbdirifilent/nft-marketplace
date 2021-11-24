@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { create as ipfsHttpClient } from "ipfs-http-client";
-
 import { nftaddress, nftmarketaddress } from "../config";
-import NFT from "../artifacts/contracts/NFT.sol/NFT.json";
-import NFTMarket from "../artifacts/contracts/NFTMarketPlace.sol/NFTMarketPlace.json";
+
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
+
+import ListService from "../Services/ListService";
 
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
@@ -17,6 +18,11 @@ function List() {
     name: "",
     description: "",
   });
+  const [listInput, updateListInput] = useState({
+    address: "",
+    tokenId: "",
+    price: "",
+  });
 
   const navigate = useNavigate();
   const provider = useSelector((state) => state.provider.blockchain);
@@ -24,10 +30,15 @@ function List() {
   async function onChange(e) {
     const file = e.target.files[0];
     try {
-      const added = await client.add(file, {
+      const fileAddedPromise = client.add(file, {
         progress: (prog) => console.log(`received: ${prog}`),
       });
-      console.log(added);
+      toast.promise(fileAddedPromise, {
+        loading: "Receiving Image File",
+        success: "Image Received",
+        error: "Error receiving Image file",
+      });
+      const added = await fileAddedPromise;
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
       setFileUrl(url);
     } catch (e) {
@@ -40,38 +51,18 @@ function List() {
     if (!name || !description || !price || !fileUrl) return;
     const data = JSON.stringify({ name, description, image: fileUrl });
     try {
-      const added = await client.add(data);
+      const uploadToIPFSPromise = client.add(data);
+      toast.promise(uploadToIPFSPromise, {
+        loading: "Uploading metadata to IPFS",
+        success: "Done",
+        error: "Error uploading",
+      });
+      const added = await uploadToIPFSPromise;
       const url = `https://ipfs.infura.io/ipfs/${added.path}`;
-      await list(url);
+      await ListService.list(provider, url, formInput, navigate);
     } catch (e) {
       console.log("Error uploading file: ", e);
     }
-  }
-
-  async function list(url) {
-    const signer = provider.getSigner();
-
-    let contract = new ethers.Contract(nftaddress, NFT.abi, signer);
-    let transaction = await contract.createToken(url);
-    let tx = await transaction.wait();
-
-    let event = tx.events[0];
-    let value = event.args[2];
-    let tokenId = value.toNumber();
-    console.log("tokenId", tokenId);
-
-    const price = ethers.utils.parseUnits(formInput.price, "ether");
-
-    contract = new ethers.Contract(nftmarketaddress, NFTMarket.abi, signer);
-    let listingFee = await contract.listingFee();
-    listingFee = listingFee.toString();
-
-    transaction = await contract.list(nftaddress, tokenId, price, {
-      value: listingFee,
-    });
-
-    await transaction.wait();
-    navigate("/");
   }
 
   return (
@@ -84,24 +75,36 @@ function List() {
           className="col mt-2 mr-2 border rounded p-3"
           size="25"
           placeholder="token address"
+          onChange={(e) =>
+            updateListInput({ ...listInput, address: e.target.value })
+          }
         />
         <input
           type="text"
           className="col mt-2 mr-2 border rounded p-3"
           size="25"
           placeholder="token ID"
+          onChange={(e) =>
+            updateListInput({ ...listInput, tokenId: e.target.value })
+          }
         />
         <input
           type="text"
           className="col mt-2 border rounded p-3"
           size="25"
           placeholder="price (MATIC)"
+          onChange={(e) =>
+            updateListInput({ ...listInput, price: e.target.value })
+          }
         />
       </div>
       <div className="px-20">
         <button
           className="font-bold mt-4 bg-pink-500 text-white rounded shadow-lg"
           style={{ width: "100px", height: "40px" }}
+          onClick={() =>
+            ListService.listExisting(provider, listInput, navigate)
+          }
         >
           List
         </button>

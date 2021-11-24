@@ -1,13 +1,13 @@
-import logo from "./logo.svg";
 import "./App.css";
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import store from "./store/store";
+import toast, { Toaster } from "react-hot-toast";
 import action from "./store/actions/MainActions";
 import Home from "./Components/Home";
 import Assets from "./Components/Assets";
 import List from "./Components/List";
+import NavigationBar from "./Components/NavigationBar";
 
 function App() {
   const dispatch = useDispatch();
@@ -22,6 +22,7 @@ function App() {
 
   return (
     <React.Fragment>
+      <NavigationBar />
       <BrowserRouter>
         <Routes>
           <Route exact path="/" element={<Home />} />
@@ -30,6 +31,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
+      <Toaster position="botom-center" />
     </React.Fragment>
   );
 }

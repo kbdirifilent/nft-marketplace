@@ -21,7 +21,7 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
 
     mapping(uint256 => NFTItem) public idToNFTItem;
     mapping(address => mapping(uint256 => uint256)) metadataToItemId; // nftAddress => tokenId => itemId
-    mapping(address => uint256[]) ownerToItemIds; // owner to itemId
+    mapping(address => uint256[]) public ownerToItemIds; // owner to itemId
 
     uint256 public listingFee = 0.025 ether;
 
@@ -69,6 +69,12 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
         }
     }
 
+    function unlist(uint256 itemId) public nonReentrant {
+        NFTItem storage nft = idToNFTItem[itemId];
+        require(nft.owner == msg.sender, "cannot unlist other's NFT");
+        nft.listing = false;
+    }
+
     function buy(uint256 itemId) public payable nonReentrant {
         NFTItem storage Item = idToNFTItem[itemId];
         require(Item.price != 0, "NFT is not existed");
@@ -100,7 +106,7 @@ contract NFTMarketPlace is ReentrancyGuard, Ownable {
         ownerToItemIds[owner][index] = ownerToItemIds[owner][
             ownerToItemIds[owner].length - 1
         ];
-        delete ownerToItemIds[owner][ownerToItemIds[owner].length - 1];
+        ownerToItemIds[owner].pop();
     }
 
     function withdraw(
